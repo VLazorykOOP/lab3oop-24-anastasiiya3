@@ -1,0 +1,139 @@
+#include <iostream>
+#include <string>
+#include <cmath>
+#include <stdexcept>
+
+using namespace std;
+
+class Square {
+private:
+    double side;
+    string color;
+
+    // Перевірка коректності сторони
+    bool isValidSide(double s) {
+        return s > 0;
+    }
+
+    // Перевірка коректності кольору
+    bool isValidColor(const string& c) {
+        return !c.empty();
+    }
+
+public:
+    // Конструктор за замовчуванням
+    Square() : side(1.0), color("black") {}
+
+    // Конструктор з параметрами
+    Square(double s, const string& c) {
+        setSide(s);
+        setColor(c);
+    }
+
+    // Функції обчислення
+    double calculateArea() const {
+        return side * side;
+    }
+
+    double calculatePerimeter() const {
+        return 4 * side;
+    }
+
+    double calculateCircumradius() const {
+        return (side * sqrt(2)) / 2;
+    }
+
+    double calculateInradius() const {
+        return side / 2;
+    }
+
+    // Сеттери з перевіркою коректності
+    void setSide(double s) {
+        if (!isValidSide(s)) {
+            throw invalid_argument("Side must be positive");
+        }
+        side = s;
+    }
+
+    void setColor(const string& c) {
+        if (!isValidColor(c)) {
+            throw invalid_argument("Color cannot be empty");
+        }
+        color = c;
+    }
+
+    // Геттери
+    double getSide() const {
+        return side;
+    }
+
+    string getColor() const {
+        return color;
+    }
+
+    // Функція друку
+    void print() const {
+        cout << "Square properties:\n";
+        cout << " - Side: " << side << endl;
+        cout << " - Color: " << color << endl;
+        cout << " - Area: " << calculateArea() << endl;
+        cout << " - Perimeter: " << calculatePerimeter() << endl;
+        cout << " - Circumradius: " << calculateCircumradius() << endl;
+        cout << " - Inradius: " << calculateInradius() << endl;
+    }
+};
+
+// Функція для тестування класу Square
+void testSquare() {
+    try {
+        cout << "=== Testing Square class ===\n\n";
+
+        // Тест конструктора за замовчуванням
+        Square square1;
+        cout << "Default square:\n";
+        square1.print();
+        cout << endl;
+
+        // Тест конструктора з параметрами
+        Square square2(5.0, "red");
+        cout << "Custom square (5.0, red):\n";
+        square2.print();
+        cout << endl;
+
+        // Тест зміни властивостей
+        square2.setSide(3.0);
+        square2.setColor("blue");
+        cout << "Modified square (3.0, blue):\n";
+        square2.print();
+        cout << endl;
+
+        // Тест некоректних значень
+        try {
+            Square square3(-2.0, "green");
+        } catch (const invalid_argument& e) {
+            cout << "Error creating square: " << e.what() << endl;
+        }
+
+        try {
+            Square square4(4.0, "");
+        } catch (const invalid_argument& e) {
+            cout << "Error creating square: " << e.what() << endl;
+        }
+
+        // Тест обчислень
+        Square testSquare(10.0, "test");
+        cout << "\nTest calculations for square with side 10:\n";
+        cout << " - Area: " << testSquare.calculateArea() << " (expected: 100)\n";
+        cout << " - Perimeter: " << testSquare.calculatePerimeter() << " (expected: 40)\n";
+        cout << " - Circumradius: " << testSquare.calculateCircumradius() << " (expected: ~7.071)\n";
+        cout << " - Inradius: " << testSquare.calculateInradius() << " (expected: 5)\n";
+
+    } catch (const exception& e) {
+        cerr << "Test failed: " << e.what() << endl;
+    }
+}
+
+int main() {
+    testSquare();
+    return 0;
+}
