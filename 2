@@ -1,0 +1,225 @@
+#include <iostream>
+#include <stdexcept>
+
+class Vector {
+private:
+    unsigned int* data;
+    unsigned int size;
+    int state;
+    static int object_count;
+
+public:
+    enum StateCodes {
+        OK = 0,
+        MEMORY_ERROR = 1,
+        INDEX_OUT_OF_BOUNDS = 2,
+        NEGATIVE_SIZE = 3
+    };
+
+    // Конструктор без параметрів
+    Vector() : size(1), state(OK) {
+        data = new (std::nothrow) unsigned int[1];
+        if (!data) {
+            state = MEMORY_ERROR;
+        } else {
+            data[0] = 0;
+        }
+        object_count++;
+    }
+
+    // Конструктор з одним параметром (розмір)
+    Vector(int n) : state(OK) {
+        if (n < 0) {
+            size = 0;
+            state = NEGATIVE_SIZE;
+            data = nullptr;
+        } else {
+            size = n;
+            data = new (std::nothrow) unsigned int[n]();
+            if (!data) state = MEMORY_ERROR;
+        }
+        object_count++;
+    }
+
+    // Конструктор з двома параметрами (розмір і значення)
+    Vector(int n, unsigned int value) : state(OK) {
+        if (n < 0) {
+            size = 0;
+            state = NEGATIVE_SIZE;
+            data = nullptr;
+        } else {
+            size = n;
+            data = new (std::nothrow) unsigned int[n];
+            if (!data) {
+                state = MEMORY_ERROR;
+            } else {
+                for (unsigned int i = 0; i < size; ++i)
+                    data[i] = value;
+            }
+        }
+        object_count++;
+    }
+
+    // Конструктор копіювання
+    Vector(const Vector& other) : size(other.size), state(other.state) {
+        data = new (std::nothrow) unsigned int[size];
+        if (!data) {
+            state = MEMORY_ERROR;
+        } else {
+            for (unsigned int i = 0; i < size; ++i)
+                data[i] = other.data[i];
+        }
+        object_count++;
+    }
+
+    // Оператор присвоєння
+    Vector& operator=(const Vector& other) {
+        if (this == &other) return *this;
+
+        delete[] data;
+
+        size = other.size;
+        state = other.state;
+        data = new (std::nothrow) unsigned int[size];
+
+        if (!data) {
+            state = MEMORY_ERROR;
+        } else {
+            for (unsigned int i = 0; i < size; ++i)
+                data[i] = other.data[i];
+        }
+
+        return *this;
+    }
+
+    // Деструктор
+    ~Vector() {
+        delete[] data;
+        object_count--;
+    }
+
+    // Функція для встановлення значення
+    void set(unsigned int index, unsigned int value = 0) {
+        if (index >= size) {
+            state = INDEX_OUT_OF_BOUNDS;
+            return;
+        }
+        data[index] = value;
+        state = OK;
+    }
+
+    // Функція для отримання значення
+    unsigned int get(unsigned int index) {
+        if (index >= size) {
+            state = INDEX_OUT_OF_BOUNDS;
+            return 0;
+        }
+        state = OK;
+        return data[index];
+    }
+
+    // Друк
+    void print() const {
+        std::cout << "[ ";
+        for (unsigned int i = 0; i < size; ++i)
+            std::cout << data[i] << " ";
+        std::cout << "]" << std::endl;
+    }
+
+    // Арифметичні операції
+    Vector add(const Vector& other) {
+        Vector result(size);
+        if (size != other.size) return result;
+
+        for (unsigned int i = 0; i < size; ++i)
+            result.data[i] = data[i] + other.data[i];
+        return result;
+    }
+
+    Vector subtract(const Vector& other) {
+        Vector result(size);
+        if (size != other.size) return result;
+
+        for (unsigned int i = 0; i < size; ++i)
+            result.data[i] = data[i] - other.data[i];
+        return result;
+    }
+
+    Vector multiply(unsigned short factor) {
+        Vector result(size);
+        for (unsigned int i = 0; i < size; ++i)
+            result.data[i] = data[i] * factor;
+        return result;
+    }
+
+    // Порівняння
+    bool isEqual(const Vector& other) const {
+        if (size != other.size) return false;
+        for (unsigned int i = 0; i < size; ++i)
+            if (data[i] != other.data[i]) return false;
+        return true;
+    }
+
+    bool isNotEqual(const Vector& other) const {
+        return !isEqual(other);
+    }
+
+    bool isGreaterThan(const Vector& other) const {
+        unsigned int sum1 = 0, sum2 = 0;
+        for (unsigned int i = 0; i < size; ++i) sum1 += data[i];
+        for (unsigned int i = 0; i < other.size; ++i) sum2 += other.data[i];
+        return sum1 > sum2;
+    }
+
+    bool isLessThan(const Vector& other) const {
+        return !isGreaterThan(other) && isNotEqual(other);
+    }
+
+    // Отримання стану
+    int getState() const { return state; }
+
+    // Статична функція для підрахунку об’єктів
+    static int getObjectCount() { return object_count; }
+};
+
+// Ініціалізація статичної змінної
+int Vector::object_count = 0;
+
+// Тестування
+int main() {
+    Vector v1;
+    Vector v2(3);
+    Vector v3(3, 5);
+
+    v1.print();
+    v2.print();
+    v3.print();
+
+    v2.set(0, 10);
+    v2.set(1, 20);
+    v2.set(2, 30);
+
+    std::cout << "v2: ";
+    v2.print();
+
+    Vector v4 = v2.add(v3);
+    std::cout << "v2 + v3: ";
+    v4.print();
+
+    Vector v5 = v3.subtract(v2);
+    std::cout << "v3 - v2: ";
+    v5.print();
+
+    Vector v6 = v3.multiply(2);
+    std::cout << "v3 * 2: ";
+    v6.print();
+
+    std::cout << "v2 == v3: " << (v2.isEqual(v3) ? "true" : "false") << std::endl;
+    std::cout << "v2 != v3: " << (v2.isNotEqual(v3) ? "true" : "false") << std::endl;
+    std::cout << "v2 > v3: " << (v2.isGreaterThan(v3) ? "true" : "false") << std::endl;
+    std::cout << "v2 < v3: " << (v2.isLessThan(v3) ? "true" : "false") << std::endl;
+
+    std::cout << "Object count: " << Vector::getObjectCount() << std::endl;
+
+    return 0;
+}
